@@ -1,5 +1,6 @@
 const express = require('express')
 const mqtt = require('mqtt')
+const { promisify } = require('util')
 const { sequelize, Item } = require('./db')
 
 function createApp (queue) {
@@ -89,10 +90,10 @@ class Server {
 
   stop () {
     const stopServer = this.server
-      ? new Promise(resolve => this.server.close(resolve))
+      ? promisify(this.server.close).bind(this.server)()
       : Promise.resolve()
     const stopQueue = this.queue
-      ? new Promise((resolve, reject) => this.queue.end(err => !err ? resolve() : reject(err)))
+      ? promisify(this.queue.end).bind(this.queue)()
       : Promise.resolve()
     return Promise.all([stopServer, stopQueue])
   }
