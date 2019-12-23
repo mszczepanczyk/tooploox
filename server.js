@@ -9,29 +9,31 @@ function createApp (queue) {
   app.use(express.json())
 
   app.post('/items', async (req, res) => {
-    await Item.build(req.body).save().then(item => {
+    try {
+      const item = await Item.build(req.body).save()
       res.status(200).json(item)
-    }).catch(err => {
+    } catch (err) {
       console.error(err)
       res.status(500).end()
-    })
+    }
   })
 
   app.get('/items/:id', async (req, res) => {
-    const { id } = req.params
-    Item.findOne({
-      attributes: ['id', 'name', 'messages'],
-      where: { id }
-    }).then(item => {
+    try {
+      const { id } = req.params
+      const item = await Item.findOne({
+        attributes: ['id', 'name', 'messages'],
+        where: { id }
+      })
       if (item) {
         res.status(200).json(item)
       } else {
         res.status(404).end()
       }
-    }).catch(err => {
+    } catch (err) {
       console.error(err)
       res.status(500).end()
-    })
+    }
   })
 
   app.post('/items/:id/messages', (req, res) => {
@@ -57,13 +59,12 @@ function initQueue () {
         console.log('Got:', payload.toString())
         try {
           const { id, message } = JSON.parse(payload)
-          await Item.findOne({
+          const item = await Item.findOne({
             attributes: ['id', 'name', 'messages'],
             where: { id }
-          }).then(item => {
-            item.messages = (item.messages || '') + message
-            return item.save()
           })
+          item.messages = (item.messages || '') + message
+          await item.save()
         } catch (err) {
           console.error(err)
         }
