@@ -63,7 +63,11 @@ function initQueue () {
             attributes: ['id', 'name', 'messages'],
             where: { id }
           })
-          item.messages = (item.messages || '') + message
+          if (!item.messages) {
+            item.messages = message
+          } else if (message) {
+            item.messages = item.messages + ' ' + message
+          }
           await item.save()
         } catch (err) {
           console.error(err)
